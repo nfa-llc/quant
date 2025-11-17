@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package option_profile;
+
+message OptionProfile {
+  int64 timestamp = 1; // Timestamp remains int64 as it's a Unix timestamp
+  string ticker = 2;
+  uint32 spot = 3; // Multiplied by 100, now int32
+  optional sint32 min_dte = 4;
+  optional sint32 sec_min_dte = 5;
+  uint32 major_call_gamma = 6; // Multiplied by 100, now int32
+  uint32 major_put_gamma = 7; // Multiplied by 100, now int32
+  uint32 major_long_gamma = 8; // Multiplied by 100, now int32
+  uint32 major_short_gamma = 9; // Multiplied by 100, now int32
+  repeated MiniContract mini_contracts = 10;
+}
+
+message MiniContract {
+  uint32 strike = 1; // Multiplied by 100, now int32
+  uint32 call_ivol = 2; // Multiplied by 1000
+  uint32 put_ivol = 3; // Multiplied by 1000
+  sint32 call_cvolume = 4; // Multiplied by 100 (Always present)
+  repeated sint32 call_cvolume_priors = 5; // Multiplied by 100 (Always present, but may be empty)
+  optional sint32 put_cvolume = 6; // NO MULTIPLIER, will always be volume which is already integer
+  optional MiniContractPriors put_cvolume_priors = 7; // NO MULTIPLIER, will always be volume which is already integer
+}
+
+message MiniContractPriors {
+  repeated sint32 values = 1;
+}

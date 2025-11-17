@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package orderflow_proto;
+
+message Orderflow {
+  int64 timestamp = 1;
+  string ticker = 2;
+  uint32 spot = 3; // Multiplied by 100
+
+  uint32 zero_major_long_gamma = 4; // Multiplied by 100
+  uint32 zero_major_short_gamma = 5; // Multiplied by 100
+  uint32 one_major_long_gamma = 6; // Multiplied by 100
+  uint32 one_major_short_gamma = 7; // Multiplied by 100
+  uint32 zero_major_call_gamma = 8; // Multiplied by 100
+  uint32 zero_major_put_gamma = 9; // Multiplied by 100
+  uint32 one_major_call_gamma = 10; // Multiplied by 100
+  uint32 one_major_put_gamma = 11; // Multiplied by 100
+
+  // =========== state ===========
+  sint32 zero_convexity_ratio = 12; 
+  sint32 one_convexity_ratio = 13; 
+  sint32 zero_gex_ratio = 14; 
+  sint32 one_gex_ratio = 15; 
+  sint32 zero_net_vanna = 16; 
+  sint32 one_net_vanna = 17; 
+  sint32 zero_net_charm = 18; 
+  sint32 one_net_charm = 19; 
+  sint32 zero_agg_total_dex = 20; 
+  sint32 one_agg_total_dex = 21; 
+  sint32 zero_agg_call_dex = 22; 
+  sint32 one_agg_call_dex = 23; 
+  sint32 zero_agg_put_dex = 24; 
+  sint32 one_agg_put_dex = 25; 
+  sint32 zero_net_total_dex = 26; 
+  sint32 one_net_total_dex = 27; 
+  sint32 zero_net_call_dex = 28; 
+  sint32 one_net_call_dex = 29; 
+  sint32 zero_net_put_dex = 30; 
+  sint32 one_net_put_dex = 31; 
+
+  // =========== orderflow ===========
+  sint32 dex_orderflow = 32; 
+  sint32 gex_orderflow = 33; 
+  sint32 convexity_orderflow = 34; 
+  sint32 one_dex_orderflow = 35; 
+  sint32 one_gex_orderflow = 36; 
+  sint32 one_convexity_orderflow = 37; 
+}

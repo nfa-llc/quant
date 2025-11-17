@@ -1,0 +1,14 @@
+azure-core==1.36.0
+azure-messaging-webpubsubclient==1.1.0
+certifi==2025.11.12
+charset-normalizer==3.4.4
+grpcio==1.76.0
+grpcio-tools==1.76.0
+idna==3.11
+isodate==0.7.2
+protobuf==6.33.1
+requests==2.32.5
+typing_extensions==4.15.0
+urllib3==2.5.0
+websocket-client==1.9.0
+zstandard==0.25.0

@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package gex_profile;
+
+// Gex represents the Gamma Exposure data for a specific ticker at a given timestamp.
+message Gex {
+  int64 timestamp = 1; // Unix timestamp. int64 is fine as timestamps are large and positive.
+  string ticker = 2;
+
+  optional sint32 min_dte = 3; // Optional Minimum Days to Expiration. int32 is fine if DTE can be negative or large positive. If always small and positive, uint32 might be marginally better.
+  optional sint32 sec_min_dte = 4; // Optional Second Minimum Days to Expiration. Same as min_dte.
+
+  // Floating point values multiplied by 100 (trunc2)
+  uint32 spot = 5;            // Spot price * 100. Changed to sint32.
+  uint32 zero_gamma = 6;      // Zero Gamma level * 100. Changed to sint32.
+  uint32 major_pos_vol = 7;   // Major Positive Volume * 100. Changed to sint32.
+  uint32 major_pos_oi = 8;    // Major Positive Open Interest * 100. Changed to sint32.
+  uint32 major_neg_vol = 9;   // Major Negative Volume * 100. Changed to sint32.
+  uint32 major_neg_oi = 10;   // Major Negative Open Interest * 100. Changed to sint32.
+
+  repeated Strike strikes = 11; // List of Strike price related data
+
+  // Floating point values multiplied by 1000 (trunc5)
+  sint32 sum_gex_vol = 12; // Sum of Gamma Exposure by Volume * 1000. Changed to sint32.
+  sint32 sum_gex_oi = 13;  // Sum of Gamma Exposure by Open Interest * 1000. Changed to sint32.
+
+  // Floating point value multiplied by 1,000 (trunc3)
+  sint32 delta_risk_reversal = 14; // Delta Risk Reversal * 1000. Changed to sint32.
+
+  optional MaxPriors max_priors = 15; // Optional maximum prior values
+}
+
+// Represents a single strike point with associated data.
+message Strike {
+  uint32 strike_price = 1; // Strike price * 100 (assuming strike_trunc implies 2 decimal places). Changed to sint32.
+  sint32 value_1 = 2;      // Generic value 1 * 100 (trunc2). Changed to sint32.
+  sint32 value_2 = 3;      // Generic value 2 * 100 (trunc2). Changed to sint32.
+  optional Priors priors = 4; // Optional prior values for this strike
+}
+
+// Represents an array of prior values, each multiplied by 100.
+message Priors {
+  repeated sint32 values = 1; // Each prior value * 100 (assuming trunc_priors implies 2 decimal places). Changed to sint32.
+}
+
+// Represents a fixed-size array of tuples for MaxPriors.
+// Each tuple contains two f64 values with different truncation rules.
+message MaxPriors {
+  repeated MaxPriorsTuple tuples = 1; // Fixed size of 6 tuples
+}
+
+// Represents a single tuple within MaxPriors.
+message MaxPriorsTuple {
+  sint32 first_value = 1;  // First value of the pair * 100 (trunc_max_priors, 2 places). Changed to sint32.
+  sint32 second_value = 2; // Second value of the pair * 1000 (trunc_max_priors, 3 places). Changed to sint32.
+}
