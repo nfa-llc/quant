@@ -40,10 +40,10 @@ NEGOTIATE_URL = f"{BASE_URL}/negotiate"
 
 # Select Tickers (used for all hubs)
 ACTIVE_TICKERS = [
-    "SPX",
-    # "ES_SPX",
+    # "SPX",
+    "ES_SPX",
     # "NDX",
-    "NQ_NDX",
+    # "NQ_NDX",
     # "RUT",
     # "SPY",
     # "QQQ",
@@ -99,13 +99,14 @@ ACTIVE_CLASSIC_CATEGORIES = [
 
 # Select categories for the 'state_gex' hub
 ACTIVE_STATE_GEX_CATEGORIES = [
-    "gex_full",
+    # "gex_full",
     # "gex_zero",
     # "gex_one",
 ]
 
 # Select categories for the 'state_greeks_zero' hub
 ACTIVE_STATE_GREEKS_ZERO_CATEGORIES = [
+    "volume_zero",
     # "delta_zero",
     # "gamma_zero",
     # "vanna_zero",
@@ -114,6 +115,7 @@ ACTIVE_STATE_GREEKS_ZERO_CATEGORIES = [
 
 # Select categories for the 'state_greeks_one' hub
 ACTIVE_STATE_GREEKS_ONE_CATEGORIES = [
+    # "volume_one",
     # "delta_one",
     # "gamma_one",
     # "vanna_one",
@@ -211,65 +213,71 @@ class WebPubSubClientManager:
 
     def on_group_message(self, event: OnGroupDataMessageArgs):
         """Handle incoming group messages."""
-        print(
-            f"[{self.hub_key}] 📩 Message from group {event.group} ({len(event.data)} bytes)")
+        # print(f"[{self.hub_key}] 📩 Message from group {event.group} ({len(event.data)} bytes)")
 
-        # Logic adapted from your React example
         try:
             # 1. Decode the outer Any wrapper
             any_message = any_pb2.Any()
             any_message.ParseFromString(event.data)
 
             message_type_url = any_message.type_url
-            print(f"  Type URL: {message_type_url}")
+            # print(f"  Type URL: {message_type_url}")
 
-            # 2. Extract category from group name (e.g., "blue_ETH-PERP_state_greeks_zero")
-            group_parts = event.group.split('_')
+            # 2. ROBUST Category Extraction
+            # The group format is: blue_{ticker}_{package}_{category}
+            # We split by the known package names to isolate the category,
+            # regardless of how many underscores the ticker has.
             current_category = ""
-            if len(group_parts) > 3:
-                # Category is everything from the 4th part onwards
-                current_category = '_'.join(group_parts[3:])
-                print(f"  Extracted Category: {current_category}")
+            known_packages = ["classic", "state", "orderflow"]
+
+            for pkg in known_packages:
+                # We look for '_{pkg}_' to ensure we don't match partial ticker names
+                separator = f"_{pkg}_"
+                if separator in event.group:
+                    # Take everything AFTER the package name
+                    current_category = event.group.split(separator)[-1]
+                    break
+
+            if not current_category:
+                # Fallback/Debug if pattern doesn't match
+                print(
+                    f"  ⚠️ Could not extract category from group: {event.group}")
+                return
+
+            # print(f"  Extracted Category: {current_category}")
 
             # 3. Route based on type_url
-            if "proto.gex" in message_type_url:  # Changed from "proto.gex"
-                # decompress_gex_message doesn't need category
+            if "proto.gex" in message_type_url:
                 gex_data = decompress_gex_message(any_message)
                 if gex_data:
-                    # TODO: Process your gex_data
-                    # print(f"  [GEX Data]: {json.dumps(gex_data, indent=2)}")
                     print(
-                        f"  [GEX Data Received]: Ticker: {gex_data.get('ticker')}, Spot: {gex_data.get('spot')}, Timestamp: {gex_data.get('timestamp')}")
+                        f"[{self.hub_key}] GEX: {gex_data.get('ticker')} @ {gex_data.get('spot')}")
 
-            elif "proto.greek" in message_type_url:  # Changed from "proto.greek"
-                if not current_category:
-                    print("  Cannot process greek message: category unknown.")
-                    return
-
-                # decompress_greek_message *needs* the category
+            elif "proto.greek" in message_type_url:
+                # Now 'current_category' will be cleanly 'volume_zero', matching your utils check
                 greek_data = decompress_greek_message(
                     any_message, current_category)
                 if greek_data:
-                    # TODO: Process your greek_data
-                    # print(f"  [Greek Data]: {json.dumps(greek_data, indent=2)}")
-                    print(
-                        f"  [Greek Data Received]: Ticker: {greek_data.get('ticker')}, Spot: {greek_data.get('spot')}, Timestamp: {greek_data.get('timestamp')}")
+                    # Differentiate output based on what we got back
+                    if "mini_contracts" in greek_data:
+                        print(
+                            f"[{self.hub_key}] {current_category}: {greek_data.get('ticker')} (JSON path)")
+                    else:
+                        print(
+                            f"[{self.hub_key}] {current_category}: {greek_data.get('ticker')} (Proto path)")
 
             elif "proto.orderflow" in message_type_url:
-                # decompress_orderflow_message doesn't need category
                 orderflow_data = decompress_orderflow_message(any_message)
                 if orderflow_data:
-                    # TODO: Process your orderflow_data
-                    # print(f"  [Orderflow Data]: {json.dumps(orderflow_data, indent=2)}")
                     print(
-                        f"  [Orderflow Data Received]: Ticker: {orderflow_data.get('ticker')}, Spot: {orderflow_data.get('spot')}, Timestamp: {orderflow_data.get('timestamp')}")
+                        f"[{self.hub_key}] Orderflow: {orderflow_data.get('ticker')}")
 
             else:
                 print(f"  Unknown message type_url: {message_type_url}")
 
         except Exception as e:
             print(f"  Failed to parse protobuf message: {e}")
-            print(f"  Raw data (first 50 bytes): {event.data[:50]!r}...")
+            # print(f"  Raw data (first 50 bytes): {event.data[:50]!r}...")
 
 
 # --- Negotiation Function (from your script) ---
@@ -299,7 +307,6 @@ def get_negotiate_response(api_key: str) -> Optional[Dict]:
 
 
 # --- Main Script ---
-
 if __name__ == "__main__":
     negotiate_data = get_negotiate_response(API_KEY)
 
@@ -311,7 +318,8 @@ if __name__ == "__main__":
 
     print("\n--- Successfully Negotiated ---")
     websocket_urls_dict = negotiate_data['websocket_urls']
-    print(json.dumps(websocket_urls_dict, indent=2))
+    # print(websocket_urls_dict)
+    # print(json.dumps(websocket_urls_dict, indent=2))
 
     # --- Start Clients ---
     print("\n--- Initializing WebSocket Clients based on GROUP_CONFIG ---")
