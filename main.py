@@ -286,15 +286,15 @@ def get_negotiate_response(api_key: str) -> Optional[Dict]:
     """
     Hits the /negotiate endpoint using an API key for authentication.
     """
-    if not api_key:
+    if not api_key or api_key == "your_api_key_here":
         print("Error: GEXBOT_API_KEY is not set.")
         return None
 
-    params = {"key": api_key}
+    headers = {"Authorization": f"Basic {api_key}"}
     print(f"Connecting to {NEGOTIATE_URL}...")
 
     try:
-        response = requests.get(NEGOTIATE_URL, params=params)
+        response = requests.get(NEGOTIATE_URL, headers=headers)
         response.raise_for_status()
         data = response.json()
         return data

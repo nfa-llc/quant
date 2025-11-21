@@ -1,6 +1,6 @@
 # Gexbot Real-Time Data Client (Python)
 
-This script connects to the Gexbot real-time data API using Azure Web PubSub. It negotiates a connection, joins specified data groups, and decompresses/parses incoming Zstandard-compressed Protobuf messages.
+This script connects to the Gexbot real-time data API. It negotiates a connection, joins specified data groups, and decompresses/parses incoming Zstandard-compressed Protobuf messages.
 
 ## Project Structure
 ```
